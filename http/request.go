@@ -7,13 +7,15 @@ import (
 )
 
 type HTTPRequest struct {
-	RequestLine []byte
-	Headers     map[string]string
-	Body        []byte
+	Method   []byte
+	URI      []byte
+	Protocol []byte
+	Headers  map[string]string
+	Body     []byte
 }
 
 func (s HTTPRequest) String() string {
-	return fmt.Sprintf("RequestLine: %s\nHeaders: %v\nBody: %s\n", s.RequestLine, s.Headers, s.Body)
+	return fmt.Sprintf("Method: %s\nURI: %s\nProtocol: %s\nHeaders: %v\nBody: %s\n", s.Method, s.URI, s.Protocol, s.Headers, s.Body)
 }
 
 func NewHTTPRequest(data []byte) (*HTTPRequest, error) {
@@ -25,15 +27,18 @@ func NewHTTPRequest(data []byte) (*HTTPRequest, error) {
 }
 
 func (r *HTTPRequest) decode(data []byte) error {
-	// Assume data is a valid HTTP request
-	requestLine, rest, found := bytes.Cut(data, []byte("\r\n"))
+	// Parse Request Line
+	requestLine, headersAndBody, found := bytes.Cut(data, []byte("\r\n"))
 	if !found {
 		return errors.New("invalid request, missing request line")
 	}
-	r.RequestLine = requestLine
+	rl := bytes.Split(requestLine, []byte(" "))
+	r.Method = rl[0]
+	r.URI = rl[1]
+	r.Protocol = rl[2]
 
 	// Parse headers
-	headers, body, found := bytes.Cut(rest, []byte("\r\n\r\n"))
+	headers, body, found := bytes.Cut(headersAndBody, []byte("\r\n\r\n"))
 	if !found {
 		return errors.New("invalid request, missing headers")
 	}
