@@ -1,3 +1,3 @@
-module github.com/Desgue/tcp-udp
+module github.com/Desgue/crudeHttpServer
 
 go 1.22.0
