@@ -6,27 +6,27 @@ import (
 	"fmt"
 )
 
-type HTTPRequest struct {
+type Request struct {
 	Method   []byte
 	URI      []byte
 	Protocol []byte
-	Headers  map[string]string
+	Headers  Header
 	Body     []byte
 }
 
-func (s HTTPRequest) String() string {
+func (s Request) String() string {
 	return fmt.Sprintf("Method: %s\nURI: %s\nProtocol: %s\nHeaders: %v\nBody: %s\n", s.Method, s.URI, s.Protocol, s.Headers, s.Body)
 }
 
-func NewHTTPRequest(data []byte) (*HTTPRequest, error) {
-	req := &HTTPRequest{
-		Headers: make(map[string]string),
+func NewRequest(data []byte) (*Request, error) {
+	req := &Request{
+		Headers: make(map[string][]string),
 	}
 	req.decode(data)
 	return req, nil
 }
 
-func (r *HTTPRequest) decode(data []byte) error {
+func (r *Request) decode(data []byte) error {
 	// Parse Request Line
 	requestLine, headersAndBody, found := bytes.Cut(data, []byte("\r\n"))
 	if !found {
@@ -47,7 +47,7 @@ func (r *HTTPRequest) decode(data []byte) error {
 		if !found {
 			return errors.New("invalid header format")
 		}
-		r.Headers[string(key)] = string(value)
+		r.Headers[string(key)] = []string{string(value)}
 	}
 
 	// Parse Body
